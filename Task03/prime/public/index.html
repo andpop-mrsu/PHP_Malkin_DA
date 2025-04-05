@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Простое ли число?</title>
+    <script>
+        let gameId;
+        let playerName = "";
+
+        function startGame() {
+            playerName = document.getElementById("player_name").value;
+            if (!playerName.trim()) {
+                alert("Введите имя!");
+                return;
+            }
+
+            fetch("/games", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ player_name: playerName })
+            })
+            .then(response => response.json())
+            .then(data => {
+                gameId = data.game_id;
+                document.getElementById("number").innerText = data.number;
+                document.getElementById("game").style.display = 'block';
+                document.getElementById("newGameBtn").style.display = 'inline-block';
+
+                // Обновляем заголовок с именем игрока
+                document.getElementById("title").innerText = `Играет: ${playerName}`;
+
+                // Скрываем ввод имени и кнопку старта
+                document.getElementById("startSection").style.display = 'none';
+            });
+        }
+
+        function sendAnswer(answer) {
+            fetch(`/step/${gameId}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ answer: answer })
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById("result").innerText = data.message;
+            });
+        }
+
+        function loadGameHistory() {
+            fetch('/games')
+                .then(response => response.json())
+                .then(data => {
+                    const table = document.getElementById("gameHistory");
+                    const tbody = table.querySelector("tbody");
+                    tbody.innerHTML = "";
+
+                    data.forEach(game => {
+                        const row = document.createElement("tr");
+                        row.innerHTML = `
+                            <td>${game.id}</td>
+                            <td>${game.player_name}</td>
+                            <td>${game.date}</td>
+                            <td>${game.number}</td>
+                            <td>${game.is_prime ? "Да" : "Нет"}</td>
+                            <td>${game.player_answer == -1 ? "Не ответил" : game.player_answer ? "Да" : "Нет"}</td>
+                            <td>${game.result}</td>
+                        `;
+                        tbody.appendChild(row);
+                    });
+
+                    table.style.display = "table";
+                })
+                .catch(error => console.error("Ошибка загрузки истории игр:", error));
+        }
+
+        function newGame() {
+            document.getElementById("game").style.display = 'none';
+            document.getElementById("result").innerText = '';
+            document.getElementById("newGameBtn").style.display = 'none';
+
+            // Возвращаем ввод имени и кнопку старта
+            document.getElementById("startSection").style.display = 'block';
+            document.getElementById("player_name").value = '';
+
+            // Возвращаем оригинальный заголовок
+            document.getElementById("title").innerText = "Простое ли число?";
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background: linear-gradient(135deg, #f06, #4a90e2);
+            color: #fff;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 5px 15px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            width: 90%;
+            max-width: 500px;
+            backdrop-filter: blur(10px);
+        }
+
+        h1 {
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        input {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #fff;
+            border-radius: 5px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.2);
+            color: #fff;
+        }
+
+        button {
+            background: #fff;
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            background: rgba(255, 255, 255, 0.8);
+        }
+
+        #game {
+            display: none;
+            margin-top: 20px;
+        }
+
+        #number {
+            font-size: 24px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        #result {
+            margin-top: 10px;
+            font-size: 18px;
+            color: #fff;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .history-container {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th, td {
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            padding: 10px;
+            text-align: center;
+            color: #fff;
+        }
+
+        th {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        tr:nth-child(even) {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        #newGameBtn {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="title">Простое ли число?</h1>
+
+        <div id="startSection">
+            <input type="text" id="player_name" placeholder="Введите имя">
+            <button onclick="startGame()">Начать игру</button>
+        </div>
+
+        <div id="game">
+            <p>Число: <span id="number"></span></p>
+            <button onclick="sendAnswer(1)">Простое</button>
+            <button onclick="sendAnswer(0)">Составное</button>
+            <p id="result"></p>
+        </div>
+
+        <button id="newGameBtn" onclick="newGame()">Новая игра</button>
+    </div>
+
+    <div class="history-container">
+        <h2>История игр</h2>
+        <button onclick="loadGameHistory()">Показать историю игр</button>
+
+        <table id="gameHistory">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Имя игрока</th>
+                    <th>Дата</th>
+                    <th>Число</th>
+                    <th>Простое?</th>
+                    <th>Ответ игрока</th>
+                    <th>Результат</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+    </div>
+</body>
+</html>
