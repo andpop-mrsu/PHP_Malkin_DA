@@ -1,0 +1,28 @@
+{
+    "name": "jesusstar/php_malkin_da",
+    "description": "Implementation of a php program on the topic \"Prime number\"",
+    "type": "project",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "JesusStar\\prime\\": "src/"
+        },
+        "files": [
+            "src/Controller.php",
+            "src/View.php"
+        ]
+    },
+    "bin": [
+        "bin/prime"
+    ],
+    "authors": [
+        {
+            "name": "Denis Malkin",
+            "email": "JesusStar.Amunarh@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "wp-cli/php-cli-tools": "^0.12.0"
+    }
+}
